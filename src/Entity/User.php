@@ -2,14 +2,13 @@
 
 namespace App\Entity;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\UserRepository")
  */
-class User
+class User implements UserInterface
 {
     /**
      * @ORM\Id()
@@ -19,24 +18,30 @@ class User
     private $id;
 
     /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $firstname;
-
-    /**
-     * @ORM\Column(type="string", length=255)
-     */
-    private $lastname;
-
-    /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="string", length=180, unique=true)
      */
     private $email;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="json")
+     */
+    private $roles = [];
+
+    /**
+     * @var string The hashed password
+     * @ORM\Column(type="string")
      */
     private $password;
+
+    /**
+     * @ORM\Column(type="string", length=32)
+     */
+    private $firstname;
+
+    /**
+     * @ORM\Column(type="string", length=32)
+     */
+    private $lastname;
 
     /**
      * @ORM\Column(type="string", length=255)
@@ -44,33 +49,96 @@ class User
     private $address;
 
     /**
-     * @ORM\OneToMany(targetEntity="App\Entity\Car", mappedBy="user")
-     */
-    private $car;
-
-    /**
      * @ORM\Column(type="boolean")
      */
     private $isActive;
 
     /**
-     * @ORM\Column(type="array")
-     */
-    private $roles = [];
-
-    /**
-     * @ORM\Column(type="string", length=10, nullable=true)
+     * @ORM\Column(type="string", length=32, nullable=true)
      */
     private $phoneNumber;
 
-    public function __construct()
-    {
-        $this->car = new ArrayCollection();
-    }
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $birthDate;
 
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): self
+    {
+        $this->email = $email;
+
+        return $this;
+    }
+
+    /**
+     * A visual identifier that represents this user.
+     *
+     * @see UserInterface
+     */
+    public function getUsername(): string
+    {
+        return (string) $this->email;
+    }
+
+    /**
+     * @see UserInterface
+     */
+    public function getRoles(): array
+    {
+        $roles = $this->roles;
+        // guarantee every user at least has ROLE_USER
+        $roles[] = 'ROLE_USER';
+
+        return array_unique($roles);
+    }
+
+    public function setRoles(array $roles): self
+    {
+        $this->roles = $roles;
+
+        return $this;
+    }
+
+    /**
+     * @see UserInterface
+     */
+    public function getPassword(): string
+    {
+        return (string) $this->password;
+    }
+
+    public function setPassword(string $password): self
+    {
+        $this->password = $password;
+
+        return $this;
+    }
+
+    /**
+     * @see UserInterface
+     */
+    public function getSalt()
+    {
+        // not needed when using the "bcrypt" algorithm in security.yaml
+    }
+
+    /**
+     * @see UserInterface
+     */
+    public function eraseCredentials()
+    {
+        // If you store any temporary, sensitive data on the user, clear it here
+        // $this->plainPassword = null;
     }
 
     public function getFirstname(): ?string
@@ -97,30 +165,6 @@ class User
         return $this;
     }
 
-    public function getEmail(): ?string
-    {
-        return $this->email;
-    }
-
-    public function setEmail(string $email): self
-    {
-        $this->email = $email;
-
-        return $this;
-    }
-
-    public function getPassword(): ?string
-    {
-        return $this->password;
-    }
-
-    public function setPassword(string $password): self
-    {
-        $this->password = $password;
-
-        return $this;
-    }
-
     public function getAddress(): ?string
     {
         return $this->address;
@@ -129,37 +173,6 @@ class User
     public function setAddress(string $address): self
     {
         $this->address = $address;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection|Car[]
-     */
-    public function getCar(): Collection
-    {
-        return $this->car;
-    }
-
-    public function addCar(Car $car): self
-    {
-        if (!$this->car->contains($car)) {
-            $this->car[] = $car;
-            $car->setUser($this);
-        }
-
-        return $this;
-    }
-
-    public function removeCar(Car $car): self
-    {
-        if ($this->car->contains($car)) {
-            $this->car->removeElement($car);
-            // set the owning side to null (unless already changed)
-            if ($car->getUser() === $this) {
-                $car->setUser(null);
-            }
-        }
 
         return $this;
     }
@@ -176,18 +189,6 @@ class User
         return $this;
     }
 
-    public function getRoles(): ?array
-    {
-        return $this->roles;
-    }
-
-    public function setRoles(array $roles): self
-    {
-        $this->roles = $roles;
-
-        return $this;
-    }
-
     public function getPhoneNumber(): ?string
     {
         return $this->phoneNumber;
@@ -196,6 +197,18 @@ class User
     public function setPhoneNumber(?string $phoneNumber): self
     {
         $this->phoneNumber = $phoneNumber;
+
+        return $this;
+    }
+
+    public function getBirthDate(): ?\DateTimeInterface
+    {
+        return $this->birthDate;
+    }
+
+    public function setBirthDate(?\DateTimeInterface $birthDate): self
+    {
+        $this->birthDate = $birthDate;
 
         return $this;
     }
